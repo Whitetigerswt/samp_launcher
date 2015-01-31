@@ -28,12 +28,8 @@ int main(int argc, char* argv[])
 	int port;
 	std::cin >> port;
 
-	// Construct it all in one command line string.
-	char commandLine[128];
-	sprintf_s(commandLine, sizeof(commandLine), "-c -h %s -p %d", ip, port);
-
 	// Get the user's gta_sa location
-	char exeLocation[256];
+	char exeLocation[256], name[24];
 	DWORD buffer = sizeof(exeLocation);
 
 	// Open registry key
@@ -47,17 +43,32 @@ int main(int argc, char* argv[])
 	// Get value
 	DWORD dwRet = RegQueryValueEx(hKey, "gta_sa_exe", NULL, NULL, (LPBYTE)&exeLocation, &buffer);
 
-	// Close it
-	RegCloseKey(hKey);
+	// Make sure we got a good value for the gta_sa path
+	if (dwRet != ERROR_SUCCESS)
+		MessageBoxA(NULL, "Could not get the location of your GTA:SA installation. Is SA-MP installed correctly?", "SA:MP Launcher", MB_ICONERROR);
 
-	// remove gta_sa.exe 
+	// remove \gta_sa.exe in a new variable (leaving just the directory path)
 	char path[256];
 	strcpy_s(path, sizeof(path), exeLocation);
 	path[strlen(path) - 11] = '\0';
 
-	// Make sure we got a good value.
+	// Get the player name
+	buffer = sizeof(name);
+	dwRet = RegQueryValueEx(hKey, "PlayerName", NULL, NULL, (LPBYTE)&name, &buffer);
+
+	// Close registry
+	RegCloseKey(hKey);
+
+	char commandLine[128];
 	if (dwRet != ERROR_SUCCESS)
-		MessageBoxA(NULL, "Could not get the location of your GTA:SA installation. Is SA-MP installed correctly?", "SA:MP Launcher", MB_ICONERROR);
+	{
+		// Since a name couldn't be found, ask for one.
+		std::cout << "Enter a name";
+		std::cin >> name;
+	}
+
+	// Construct it all in one command line string.
+	sprintf_s(commandLine, sizeof(commandLine), "-c -h %s -p %d -n %s", ip, port, name);
 
 	// Create a new process, but don't let it run yet, it's suspended.
 	if (CreateProcess(exeLocation, commandLine, NULL, NULL, FALSE, DETACHED_PROCESS | CREATE_SUSPENDED, NULL, path, &StartupInfo, &ProcessInfo))
