@@ -45,7 +45,10 @@ int main(int argc, char* argv[])
 
 	// Make sure we got a good value for the gta_sa path
 	if (dwRet != ERROR_SUCCESS)
+	{
 		MessageBoxA(NULL, "Could not get the location of your GTA:SA installation. Is SA-MP installed correctly?", "SA:MP Launcher", MB_ICONERROR);
+		return 0;
+	}
 
 	// remove \gta_sa.exe in a new variable (leaving just the directory path)
 	char path[256];
@@ -152,8 +155,7 @@ int main(int argc, char* argv[])
 
 	}
 	
-	// We're done since all we needed to do was create a process, and assuming that this .exe was run under elevation (which it's required in the manifest)
-	// then gta_sa.exe will also be running under elevation.
+	// Done!
 	return 0;
 }
 
